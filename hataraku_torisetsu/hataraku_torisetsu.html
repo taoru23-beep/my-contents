@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>はたらく自分のトリセツ診断 — fumicom works</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d0d0d;--paper:#ffffff;--paper2:#f7f7f7;--accent:#c0522a;--muted:#666666;--line:#e0e0e0;--white:#ffffff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:16px;}
+.wrap{max-width:640px;margin:0 auto;padding:0 28px 80px;}
+header{padding:56px 0 40px;text-align:center;}
+.site-label{font-size:12px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase;margin-bottom:20px;}
+h1{font-family:'Noto Serif JP',serif;font-size:clamp(22px,5vw,30px);font-weight:600;line-height:1.6;margin-bottom:16px;letter-spacing:.03em;color:var(--ink);}
+.header-sub{font-size:15px;color:var(--muted);line-height:1.9;font-weight:300;margin-bottom:28px;}
+.rule{width:36px;height:2px;background:var(--accent);margin:0 auto;}
+.steps{display:flex;align-items:center;justify-content:center;gap:10px;margin:32px 0 8px;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--line);transition:all .3s;}
+.step-dot.active{background:var(--accent);transform:scale(1.3);}
+.step-dot.done{background:var(--accent);opacity:.35;}
+.step-label{font-size:12px;color:var(--muted);letter-spacing:.1em;text-align:center;margin-bottom:22px;}
+.card{background:var(--white);border:1px solid var(--line);border-radius:3px;padding:40px 36px;margin-bottom:16px;}
+.fade-in{animation:up .4s ease forwards;}
+@keyframes up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.input-group{margin-bottom:22px;}
+.input-label{font-size:12px;letter-spacing:.12em;color:var(--muted);margin-bottom:10px;display:block;}
+.date-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.date-input{background:var(--paper2);border:1.5px solid var(--line);border-radius:3px;padding:14px 10px;font-size:17px;font-family:inherit;color:var(--ink);text-align:center;width:100%;-webkit-appearance:none;transition:border-color .15s;}
+.date-input:focus{outline:none;border-color:var(--accent);background:var(--white);}
+.date-input::-webkit-outer-spin-button,.date-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.date-input[type=number]{-moz-appearance:textfield;}
+.hint-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:6px;}
+.hint-text{font-size:11px;color:var(--muted);text-align:center;letter-spacing:.05em;}
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.time-note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.7;font-weight:300;}
+.q-section{margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid var(--line);}
+.q-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.q-number{font-size:11px;letter-spacing:.2em;color:var(--accent);margin-bottom:12px;font-weight:500;}
+.q-text{font-family:'Noto Serif JP',serif;font-size:clamp(16px,3.5vw,19px);line-height:1.75;font-weight:400;margin-bottom:20px;letter-spacing:.02em;color:var(--ink);}
+.q-sub{font-size:13px;color:var(--muted);margin-top:-14px;margin-bottom:18px;font-weight:300;line-height:1.6;}
+.options{display:flex;flex-direction:column;gap:10px;}
+.opt{background:var(--paper2);border:1.5px solid var(--line);border-radius:3px;padding:16px 20px;text-align:left;cursor:pointer;font-family:inherit;font-size:15px;font-weight:300;line-height:1.6;color:var(--ink);transition:all .15s;}
+.opt:hover{background:var(--white);border-color:var(--accent);transform:translateX(4px);}
+.opt.sel{background:var(--white);border-color:var(--accent);border-left:3px solid var(--accent);padding-left:18px;}
+.opt-label{font-size:11px;letter-spacing:.1em;color:var(--muted);margin-right:12px;}
+.btn-primary{background:var(--ink);color:var(--white);border:none;border-radius:3px;padding:16px 48px;font-size:14px;font-family:'Noto Serif JP',serif;font-weight:400;letter-spacing:.12em;cursor:pointer;transition:background .18s;}
+.btn-primary:hover{background:#333;}
+.btn-primary:disabled{background:var(--line);color:var(--muted);cursor:not-allowed;}
+.btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:28px;}
+.btn-back{font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:inherit;letter-spacing:.05em;padding:8px 0;}
+.btn-back:hover{color:var(--ink);}
+.est{font-size:12px;color:var(--muted);margin-top:14px;text-align:center;letter-spacing:.07em;}
+#result{display:none;}
+.r-eyebrow{font-size:11px;letter-spacing:.22em;color:var(--muted);text-align:center;margin-bottom:14px;text-transform:uppercase;}
+.r-type{font-family:'Noto Serif JP',serif;font-size:clamp(26px,6vw,38px);font-weight:600;text-align:center;letter-spacing:.04em;line-height:1.3;margin-bottom:8px;color:var(--accent);}
+.r-type-en{font-size:12px;letter-spacing:.24em;color:var(--muted);text-align:center;text-transform:uppercase;margin-bottom:22px;}
+.r-accent-bar{width:32px;height:2px;background:var(--accent);margin:0 auto 30px;}
+.r-catch{font-family:'Noto Serif JP',serif;font-size:clamp(15px,3.2vw,18px);line-height:2.1;text-align:center;letter-spacing:.03em;white-space:pre-line;color:var(--ink);}
+.r-divider{width:100%;height:1px;background:var(--line);margin:28px 0;}
+.r-section-label{font-size:11px;letter-spacing:.2em;color:var(--accent);margin-bottom:14px;text-transform:uppercase;font-weight:500;}
+.self-understanding{background:var(--paper2);border-radius:3px;padding:26px 28px;}
+.su-intro{font-size:14px;color:var(--muted);line-height:1.9;font-weight:300;margin-bottom:20px;font-style:italic;}
+.su-list{display:flex;flex-direction:column;}
+.su-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+.su-item:last-child{border-bottom:none;padding-bottom:0;}
+.su-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:7px;}
+.su-text{font-size:15px;line-height:1.85;font-weight:300;color:var(--ink);}
+.r-axis-title{font-family:'Noto Serif JP',serif;font-size:17px;font-weight:600;margin-bottom:12px;letter-spacing:.03em;color:var(--ink);}
+.r-axis-body{font-size:15px;line-height:2.1;color:#2a2a2a;font-weight:300;white-space:pre-line;}
+.psych-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.psych-box{background:var(--paper2);border:1px solid var(--line);border-radius:3px;padding:20px 22px;}
+.psych-axis{font-size:11px;letter-spacing:.15em;color:var(--accent);margin-bottom:10px;font-weight:500;}
+.psych-name{font-family:'Noto Serif JP',serif;font-size:16px;font-weight:600;margin-bottom:10px;color:var(--ink);}
+.psych-desc{font-size:13px;line-height:1.9;color:#3a3a3a;font-weight:300;}
+.action-card{background:var(--white);border:1.5px solid var(--ink);border-radius:3px;overflow:hidden;}
+.action-header{padding:16px 22px;background:var(--ink);}
+.action-header-text{font-size:12px;letter-spacing:.14em;font-weight:400;color:var(--white);}
+.action-list{padding:18px 22px;}
+.action-item{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+.action-item:last-child{border-bottom:none;padding-bottom:0;}
+.action-num{font-size:12px;font-weight:500;color:var(--accent);min-width:22px;margin-top:2px;letter-spacing:.05em;}
+.action-text{font-size:14px;line-height:1.9;color:var(--ink);font-weight:300;}
+.action-text strong{font-weight:500;color:var(--ink);}
+.r-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.r-box{border:1px solid var(--line);border-radius:3px;padding:18px 20px;background:var(--paper2);}
+.r-box-label{font-size:11px;letter-spacing:.15em;color:var(--accent);margin-bottom:10px;font-weight:500;}
+.r-box-title{font-family:'Noto Serif JP',serif;font-size:15px;font-weight:600;margin-bottom:8px;color:var(--ink);}
+.r-box-body{font-size:13px;line-height:1.9;color:#3a3a3a;font-weight:300;}
+.fumiko-strip{background:var(--paper2);border-left:3px solid var(--accent);padding:24px 28px;border-radius:0 3px 3px 0;margin-bottom:16px;}
+.fumiko-from{font-size:11px;letter-spacing:.18em;color:var(--accent);margin-bottom:12px;font-weight:500;}
+.fumiko-text{font-size:14px;line-height:2.1;font-weight:300;white-space:pre-line;color:var(--ink);}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;}
+.tag{font-size:12px;padding:5px 15px;border:1px solid var(--line);border-radius:40px;color:var(--muted);font-weight:300;letter-spacing:.05em;}
+.share-wrap{text-align:center;padding:22px 0 0;}
+.share-note{font-size:12px;letter-spacing:.12em;color:var(--muted);margin-bottom:16px;}
+.btn-share{display:inline-block;background:var(--ink);color:var(--white);border:none;border-radius:3px;padding:14px 32px;font-size:13px;font-family:inherit;font-weight:400;letter-spacing:.12em;cursor:pointer;transition:background .15s;margin:0 6px 10px;}
+.btn-share:hover{background:#333;}
+.btn-retry{display:inline-block;background:none;color:var(--muted);border:1.5px solid var(--line);border-radius:3px;padding:13px 26px;font-size:13px;font-family:inherit;font-weight:300;letter-spacing:.1em;cursor:pointer;transition:all .15s;margin:0 6px 10px;}
+.btn-retry:hover{border-color:var(--ink);color:var(--ink);}
+footer{text-align:center;padding:40px 0 20px;border-top:1px solid var(--line);margin-top:40px;}
+footer p{font-size:11px;color:var(--muted);letter-spacing:.1em;line-height:2;}
+@media(max-width:500px){
+  .card{padding:28px 20px;}
+  .self-understanding{padding:22px 20px;}
+  .r-2col,.psych-grid{grid-template-columns:1fr;}
+  .fumiko-strip{padding:20px 22px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="site-label">fumicom works</div>
+  <h1>はたらく自分のトリセツ、<br>読んだことありますか。</h1>
+  <p class="header-sub">頑張っているのに消耗する。<br>それはたいてい、トリセツ通りに動いていないだけです。</p>
+  <div class="rule"></div>
+</header>
+
+<div class="steps" id="step-dots">
+  <div class="step-dot active" id="dot-0"></div>
+  <div class="step-dot" id="dot-1"></div>
+  <div class="step-dot" id="dot-2"></div>
+</div>
+<div class="step-label" id="step-label">生年月日を入力</div>
+
+<div id="step-0" class="fade-in">
+  <div class="card">
+    <div class="input-group">
+      <label class="input-label">生年月日</label>
+      <div class="date-inputs">
+        <input class="date-input" id="y" type="number" placeholder="1985" min="1920" max="2010" oninput="checkDate()">
+        <input class="date-input" id="mo" type="number" placeholder="7" min="1" max="12" oninput="checkDate()">
+        <input class="date-input" id="d" type="number" placeholder="14" min="1" max="31" oninput="checkDate()">
+      </div>
+      <div class="hint-row"><span class="hint-text">年（西暦）</span><span class="hint-text">月</span><span class="hint-text">日</span></div>
+    </div>
+    <div class="input-group" style="margin-bottom:32px">
+      <label class="input-label">出生時刻（任意・わかれば）</label>
+      <div class="time-row">
+        <input class="date-input" id="h" type="number" placeholder="14" min="0" max="23" oninput="checkDate()">
+        <input class="date-input" id="mi" type="number" placeholder="30" min="0" max="59" oninput="checkDate()">
+      </div>
+      <div class="hint-row" style="grid-template-columns:1fr 1fr"><span class="hint-text">時</span><span class="hint-text">分</span></div>
+      <p class="time-note">時刻がわからない場合は空欄で大丈夫です。<br>入れると「判断スタイル」の精度が上がります。</p>
+    </div>
+    <div style="text-align:center">
+      <button class="btn-primary" id="btn-to-q" onclick="goToQ()" disabled>つぎへ →</button>
+      <p class="est">全3ステップ、所要時間 約2分</p>
+    </div>
+  </div>
+</div>
+
+<div id="step-1" style="display:none">
+  <div class="card fade-in">
+    <div class="q-section">
+      <div class="q-number">チェック 01 / 02</div>
+      <div class="q-text">大きな決断をするとき、<br>最終的に何が決め手になりますか。</div>
+      <p class="q-sub">理想ではなく、実際の自分の決め方を選んでください。</p>
+      <div class="options" id="q1-opts">
+        <button class="opt" onclick="sel('q1',0,this)"><span class="opt-label">A</span>データや根拠を揃えてから判断する</button>
+        <button class="opt" onclick="sel('q1',1,this)"><span class="opt-label">B</span>「やってみないとわからない」と動き始める</button>
+        <button class="opt" onclick="sel('q1',2,this)"><span class="opt-label">C</span>信頼できる人の意見を聞いてから決める</button>
+        <button class="opt" onclick="sel('q1',3,this)"><span class="opt-label">D</span>感情が落ち着いた頃に、自然と答えが出る</button>
+      </div>
+    </div>
+    <div class="q-section">
+      <div class="q-number">チェック 02 / 02</div>
+      <div class="q-text">消耗したとき、<br>一番回復する方法はどれですか。</div>
+      <p class="q-sub">「すべき」ではなく、実際に回復できるものを選んでください。</p>
+      <div class="options" id="q2-opts">
+        <button class="opt" onclick="sel('q2',0,this)"><span class="opt-label">A</span>一人で静かに過ごす。何もしない時間</button>
+        <button class="opt" onclick="sel('q2',1,this)"><span class="opt-label">B</span>体を動かす。散歩でも運動でも</button>
+        <button class="opt" onclick="sel('q2',2,this)"><span class="opt-label">C</span>好きな人と話す。笑える時間</button>
+        <button class="opt" onclick="sel('q2',3,this)"><span class="opt-label">D</span>没頭できることをする。手を動かす</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goBack()">← もどる</button>
+      <button class="btn-primary" id="btn-result" onclick="showResult()" disabled>トリセツを読む →</button>
+    </div>
+  </div>
+</div>
+
+<div id="result"></div>
+
+<footer>
+  <p>© 2026 fumicom works<br>本コンテンツの無断転載・複製・商用利用を禁じます。<br>Human Designおよび心理学をベースにしたオリジナル診断コンテンツです。</p>
+</footer>
+</div>
+
+<script>
+const TD={
+MG:{
+  n:'マルチ起動型',en:'Multi-Engine',
+  c:'複数のことを同時に動かしているとき、\nあなたのエンジンはもっとも高く回っている。',
+  si:'こういう経験、ありませんか。',
+  su:[
+    '複数のプロジェクトが重なっているとき、逆にエンジンがかかる感覚がある',
+    '「ひとつのことに集中しなさい」と言われると、なぜか効率が落ちる',
+    'やりかけのことが3つ以上ある状態が、自分にとっての「普通」',
+    '飽き性と言われてきたが、気がつくと最後まで終わらせている',
+    '締め切り前日の自分が、一番信頼できる',
+  ],
+  ax1t:'反応して、全速力で動く',
+  ax1:'ひとつのことだけをずっとやり続けると、じわじわ消耗する。それはエネルギー不足ではなく、トリセツが「複数の並走」に最適化されているから。\n\n頼まれた瞬間にエンジンがかかる。締め切りという名の燃料がある。試行錯誤しながら走れる——そこで最大の出力が出る。\n\n「飽き性」と言われてきたかもしれない。でもそれは集中力の問題ではなく、このトリセツの特性だ。',
+  ac:[
+    {s:'01',t:'<strong>今週の案件を全部書き出す。</strong>3つ以上あっても焦らない。それがあなたの通常運転。'},
+    {s:'02',t:'<strong>止まっている案件を1つ特定する。</strong>「詰まり」の原因を1行だけ書く。それだけで動き出すことが多い。'},
+    {s:'03',t:'<strong>行き詰まったら別の案件に切り替える。</strong>「切り替え」が燃料補給になる。戻ってきたら答えが出ていることが多い。'},
+  ],
+  tg:['複数タスク同時進行','締め切りで燃える','頼まれると強い','失敗から学ぶ','反応型エンジン'],
+  fm:'25年やってきて、一番しんどかったのは「ひとつのことに集中しなさい」と言われた時期だった。\n\n複数を同時に動かすのは散漫じゃない。このトリセツにとってはそれが通常運転だと気づいてから、ずいぶん楽になった。',
+},
+G:{
+  n:'持続出力型',en:'Sustained Engine',
+  c:'一度動き始めたら、長く、深く、確実に出力し続ける。\nそれがあなたのトリセツの最大の強みだ。',
+  si:'こういう経験、ありませんか。',
+  su:[
+    '「とりあえずやってみよう」という言葉が、なんとなく苦手',
+    '理由がわかってから動きたい。腑に落ちないと体が動かない',
+    '一度やると決めたら、気持ちが乗らなくても続けてしまう',
+    '好きでもないのに続けていることが、なぜかある',
+    '昨日と同じことを今日もやる安定感が、実は心地いい',
+  ],
+  ax1t:'腑に落ちてから、じっくり動く',
+  ax1:'焦って動き始めると、空回りが起きやすい。逆に、腑に落ちてから動き始めると、驚くほど安定した出力が続く。\n\n「すぐ動けない」と自分を責めてきた人も多い。でもそれは慎重すぎるのではなく、トリセツが「確認してから全力」になっているから。\n\n一度信頼が生まれた関係、一度やると決めたことへの持続力は、他のタイプにはないこのトリセツの本当の強みだ。',
+  ac:[
+    {s:'01',t:'<strong>次にやる仕事を1行で書く。</strong>そのあと「なぜこれをやるのか」を確認する。腑に落ちたら動いていい。'},
+    {s:'02',t:'<strong>「なぜ？」が見えない仕事は一度止まる。</strong>焦って動くより、理由を確認してから動く方が結果的に速い。'},
+    {s:'03',t:'<strong>翌朝の気持ちで判断する。</strong>このトリセツは時間が経つと答えが出やすい仕組み。「今夜感じること」と「明朝の判断」を分ける。'},
+  ],
+  tg:['持続力が武器','腑に落ちてから動く','信頼で加速する','深く集中できる','安定出力型'],
+  fm:'25年続いてきた理由を考えたとき、最初は「好きだから」と思っていた。\n\nでも正直に言うと、ずっと好きだったわけじゃない。\n\n続いてきたのは「嫌いにはならなかったから」だと思う。この基準に変えてから、少し楽になった。',
+},
+P:{
+  n:'全体図読み型',en:'Systems Reader',
+  c:'他の人が気づかない「全体像」を、あなたは見ている。\nそれが、あなたのトリセツの核心だ。',
+  si:'こういう経験、ありませんか。',
+  su:[
+    '会議中に「この話、本当の問題はそこじゃない」と気づく。でも言えないことが多い',
+    '頼まれていないことまでやってしまって、気づいたら疲れている',
+    '「なんでわかるの？」と言われる感覚がある',
+    '自分より能力が低い人がリーダーにいると、じわじわ消耗する',
+    '認められたとき、想定以上の力が出た経験がある',
+  ],
+  ax1t:'読んで、導いて、整える',
+  ax1:'自分でガンガン動くより、全体を読んで最適な一手を示すほうが力が出る。それがこのトリセツの特性だ。\n\n「もっと積極的に動け」と言われてきたかもしれない。でも、このトリセツにおける「積極性」は量ではなく深さにある。\n\n招かれたとき、認められたとき、想定以上の力が出る。それはこのトリセツが「正しい場所・正しい相手」に最適化されているから。',
+  ac:[
+    {s:'01',t:'<strong>今の仕事で「誰も気づいていない問題」を1つ書く。</strong>頭の中にあるなら、まず言語化する。'},
+    {s:'02',t:'<strong>それを1人の信頼できる人に伝える。</strong>「こう思うんだけど、どう思う？」だけでいい。'},
+    {s:'03',t:'<strong>「認められる場」を自分から作る。</strong>待っていても来ない。「こういうことができます」と1つだけ先に見せる。'},
+  ],
+  tg:['全体を読む','本質を見抜く','認められると強い','準備が仕事','深さで勝負'],
+  fm:'ヒアリング中に「あ、本当の問題はここじゃないな」と気づく瞬間がある。\n\nクライアントが言っていることと、本当に解決したいことがずれていることがある。\n\n聞かれたことだけ答えるのは簡単だ。でもそのズレを無視して作り始めると、あとで全部やり直しになる。',
+},
+M:{
+  n:'自走起動型',en:'Self-Starter',
+  c:'「自分で決めて、自分で動き始める」ときに、\nあなたのトリセツはもっとも高い出力を出す。',
+  si:'こういう経験、ありませんか。',
+  su:[
+    '誰かに「こうしてください」と言われると、なぜかやる気が下がる',
+    '自分で決めたことは、最後まで必ずやる',
+    'チームで動くより一人でやる方が早いと、本気で思っている',
+    '完成した瞬間の達成感が、他の何よりも大きい',
+    '「なぜそうしたの？」と聞かれても、うまく説明できないことがある。でも結果は出ている',
+  ],
+  ax1t:'先に動いて、流れを作る',
+  ax1:'誰かの指示を待っていると、消耗する。自分の判断で動き始めたとき、驚くほどスムーズに物事が動く。それがこのトリセツの読み方だ。\n\n「協調性がない」と言われてきた人も多い。でも実際は、自分が先に動くことで周りに方向を示すという役割を無意識に担っている。\n\n完成した瞬間が好き。一人でやり切ったときの満足感が、他の何よりも大きい。',
+  ac:[
+    {s:'01',t:'<strong>「自分だけで完結できる仕事」を1つ今日中に決める。</strong>小さくていい。「自分で決めた」感が大事。'},
+    {s:'02',t:'<strong>誰にも相談せず、動き始める。</strong>このトリセツは動きながら答えが出る仕組み。考えすぎると逆にエンジンが止まる。'},
+    {s:'03',t:'<strong>完成させる。</strong>それだけ。完成した瞬間があなたのエネルギーを補充する。次の仕事への燃料になる。'},
+  ],
+  tg:['先に動く','判断が速い','完成が報酬','自己完結型','流れを作る'],
+  fm:'断った相手が、今も連絡をくれる。\n\n断ったとき、もう終わりだと思った。でもその人は「あのとき断ってくれて良かった」と言ってきた。\n\n断ることは、相手を拒絶することじゃない。そのことを、その人に教えてもらった気がしてる。',
+}};
+
+const DD=[
+  {n:'根拠構築型',d:'データや根拠が揃うほど判断が速くなる。「3つの根拠が揃ったら動く」ルールを自分に設定すると、集めすぎを防げる。'},
+  {n:'行動先行型',d:'動きながら答えを見つける仕組み。止まって考えるより試してみる方が早い。「最小限の実験」を定義してから動くと精度が上がる。'},
+  {n:'対話検証型',d:'誰かに話すことで答えが明確になる。相談前に「自分はこう思う」を1行書くと整理が速い。相談は弱さではなく、このトリセツの正しい思考プロセスだ。'},
+  {n:'感情熟成型',d:'感情の波が落ち着いた後に本当の答えが出てくる。重要な決断は「今夜感じること」と「明朝の判断」を意図的に分ける習慣が力になる。'},
+];
+
+const RD=[
+  {n:'内省回復型',d:'一人の静かな時間が最大のリカバリー。週に1回、2時間の「完全ひとり時間」をカレンダーに先にブロックする。'},
+  {n:'身体接地型',d:'体を動かすことで頭がリセットされる。「15分散歩」を意思決定のルーティンにする。会議の前後に歩くだけで変わる。'},
+  {n:'関係充電型',d:'好きな人との時間がエネルギーを補充する。消耗したときに連絡できる3人を決めておく。'},
+  {n:'没頭集中型',d:'手を動かすことで頭の中が整理される。30分で完結できる「没頭できる作業」を5つリストアップしておく。'},
+];
+
+const CD={
+  vision:{t:'ビジョン描画力',b:'まだ誰も見ていない「次の形」を描くことが、あなたの意識的な強み。前例のない方向性を示すことに、自然と引き寄せられる。'},
+  action:{t:'実行推進力',b:'「やると決めたら動く」力を、あなた自身が自分の強みだと認識している。エネルギーが出力に直結する回路を、意識的に使っている。'},
+  analysis:{t:'構造分析力',b:'物事の仕組みや問題の本質を見抜く力を、あなた自身の強みだと認識している。「なぜ？」への探求が、意識的な出力になる。'},
+  connect:{t:'関係構築力',b:'人と場をつなぎ、信頼の回路を作ることを、あなたは意識的にやっている。誰が・どこにいるかの地図を、常に頭の中に持っている。'},
+};
+
+const UD={
+  structure:{t:'秩序維持の本能',b:'あなたが意識しなくても、周りには「この人がいると場が整う」と見えている。混乱した状況を自然に安定させる力が、無意識に働いている。'},
+  intuition:{t:'直感的な洞察',b:'なぜかは説明できないが、あなたの読みは正確だ。周りにはそれが「鋭い」と映っている。この無意識の感知を、もっと信頼していい。'},
+  precision:{t:'精度への執着',b:'「なんとなく」では済まさない厳密さが、あなたの無意識に宿っている。周りにはそれが「丁寧」「信頼できる」として見えている。'},
+  warmth:{t:'場の温度調整',b:'あなたが意識していなくても、場の空気を温める力が働いている。人が自然とあなたのそばに集まるのは、このトリセツの無意識の働きのせいだ。'},
+};
+
+function toJD(y,m,d){if(m<=2){y--;m+=12;}const A=Math.floor(y/100),B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5;}
+function sunLon(jd){const n=jd-2451545,L=(280.46646+36000.76983*(n/36525))%360,M=((357.52911+35999.05029*(n/36525))%360)*Math.PI/180,C=(1.914602-0.004817*(n/36525))*Math.sin(M)+0.019993*Math.sin(2*M)+0.000289*Math.sin(3*M);return((L+C)%360+360)%360;}
+function lonToGate(lon){const o=[41,19,13,49,30,55,37,63,22,36,25,17,21,51,42,3,27,24,2,23,8,20,16,35,45,12,15,52,39,53,62,56,31,33,7,4,29,59,40,64,47,6,46,18,48,57,32,50,28,44,1,43,14,34,9,5,26,11,10,58,38,54,61,60];return o[Math.floor(((lon-58+360)%360)/(360/64))%64];}
+function calcHD(y,m,d,h,mi){
+  h=h||12;mi=mi||0;
+  const fd=d+(h+mi/60)/24,jB=toJD(y,m,fd),jD=jB-87.33;
+  const sB=sunLon(jB),sD=sunLon(jD),pG=lonToGate(sB),dG=lonToGate(sD);
+  const mg=[34,57,20,10,2,14,1,15,59,3,42,29,27,9,5],pp=[43,11,17,21,51,25,36,22,13,49,37,63,30,55,16,35,45,12,8,23,4,7,31,33,62,56,32,50,28,44],mm=[26,44,40,6,46,18,48,64,47,39,19,38,58,54,61,60];
+  let tp='G';if(mg.includes(pG))tp='MG';else if(pp.includes(pG))tp='P';else if(mm.includes(pG))tp='M';
+  let ce='sacral';if(h!==12){const ha=(h/24)*360;ce=ha>80&&ha<260?'emotional':ha>=260||ha<=30?'mental':'sacral';}else{ce=m<=4?'emotional':m<=8?'sacral':'mental';}
+  const cg={vision:[1,2,3,14,60,61,62,63,64,53,54,55,56],action:[5,9,20,27,29,34,42,57,59],analysis:[4,7,8,11,17,18,23,24,43,47,48,52,58]};
+  const ug={structure:[2,5,7,9,14,15,27,29,34,42,53,57,3,20],intuition:[1,6,12,13,25,36,37,49,55,56,58,60,61,62,63,64],precision:[4,8,11,17,18,23,24,43,47,48,52]};
+  let ck='connect';for(const[k,v]of Object.entries(cg))if(v.includes(pG)){ck=k;break;}
+  let uk='warmth';for(const[k,v]of Object.entries(ug))if(v.includes(dG)){uk=k;break;}
+  return{tp,ce,ck,uk};
+}
+
+const ans={q1:null,q2:null};
+let hdv=null;
+
+function checkDate(){const y=parseInt(document.getElementById('y').value),m=parseInt(document.getElementById('mo').value),d=parseInt(document.getElementById('d').value);document.getElementById('btn-to-q').disabled=!(y>=1920&&y<=2010&&m>=1&&m<=12&&d>=1&&d<=31);}
+function sel(q,i,el){ans[q]=i;document.querySelectorAll('#'+q+'-opts .opt').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');document.getElementById('btn-result').disabled=!(ans.q1!==null&&ans.q2!==null);}
+function setStep(n){[0,1].forEach(i=>document.getElementById('step-'+i).style.display=i===n?'block':'none');[0,1,2].forEach(i=>{const dt=document.getElementById('dot-'+i);dt.className='step-dot'+(i<n?' done':i===n?' active':'');});document.getElementById('step-label').textContent=['生年月日を入力','2つのチェック',''][n]||'';window.scrollTo({top:0,behavior:'smooth'});}
+function goToQ(){const y=parseInt(document.getElementById('y').value),m=parseInt(document.getElementById('mo').value),d=parseInt(document.getElementById('d').value),h=parseInt(document.getElementById('h').value)||null,mi=parseInt(document.getElementById('mi').value)||null;hdv=calcHD(y,m,d,h,mi);setStep(1);}
+function goBack(){setStep(0);}
+
+function mk(tag,txt,cls){const el=document.createElement(tag);if(cls&&typeof cls==='string')el.className=cls;if(txt)el.textContent=txt;return el;}
+function ap(p,c){p.appendChild(c);return c;}
+
+function showResult(){
+  document.getElementById('step-1').style.display='none';
+  document.getElementById('step-dots').style.display='none';
+  document.getElementById('step-label').style.display='none';
+
+  const t=TD[hdv.tp],dv=DD[ans.q1],rv=RD[ans.q2],c=CD[hdv.ck],u=UD[hdv.uk];
+  const wrap=document.getElementById('result');
+  wrap.innerHTML='';wrap.style.display='block';
+
+  const hdr=document.createElement('div');
+  hdr.style.cssText='text-align:center;padding:8px 0 28px';
+  hdr.className='fade-in';
+  ap(hdr,mk('div','あなたのトリセツタイプ','r-eyebrow'));
+  const tn=ap(hdr,mk('div',t.n,'r-type'));
+  tn.style.color='var(--accent)';
+  ap(hdr,mk('div',t.en,'r-type-en'));
+  ap(wrap,hdr);
+
+  const card=mk('div','','card fade-in');
+  ap(card,mk('div','','r-accent-bar'));
+  ap(card,mk('div',t.c,'r-catch'));
+  ap(card,mk('div','','r-divider'));
+
+  // あなたってこういう人
+  ap(card,mk('div','あなたってこういう人','r-section-label'));
+  const su=mk('div','','self-understanding');
+  ap(su,mk('div',t.si,'su-intro'));
+  const sl=mk('div','','su-list');
+  t.su.forEach(item=>{
+    const si=mk('div','','su-item');
+    ap(si,mk('div','','su-dot'));
+    ap(si,mk('div',item,'su-text'));
+    ap(sl,si);
+  });
+  ap(su,sl);ap(card,su);
+  ap(card,mk('div','','r-divider'));
+
+  // トリセツの仕様
+  ap(card,mk('div','トリセツの仕様','r-section-label'));
+  ap(card,mk('div',t.ax1t,'r-axis-title'));
+  ap(card,mk('div',t.ax1,'r-axis-body'));
+  ap(card,mk('div','','r-divider'));
+
+  // 心理チェックの結果
+  ap(card,mk('div','心理チェックの結果','r-section-label'));
+  const pg=mk('div','','psych-grid');
+  const pb1=mk('div','','psych-box');
+  ap(pb1,mk('div','意思決定スタイル','psych-axis'));
+  ap(pb1,mk('div',dv.n,'psych-name'));
+  ap(pb1,mk('div',dv.d,'psych-desc'));
+  const pb2=mk('div','','psych-box');
+  ap(pb2,mk('div','エネルギー回復の仕組み','psych-axis'));
+  ap(pb2,mk('div',rv.n,'psych-name'));
+  ap(pb2,mk('div',rv.d,'psych-desc'));
+  ap(pg,pb1);ap(pg,pb2);ap(card,pg);
+  ap(card,mk('div','','r-divider'));
+
+  // トリセツ通りに動くには
+  ap(card,mk('div','トリセツ通りに動くには','r-section-label'));
+  const ac=mk('div','','action-card');
+  const ah=mk('div','','action-header');
+  ap(ah,mk('div','今すぐできる3ステップ','action-header-text'));
+  ap(ac,ah);
+  const al=mk('div','','action-list');
+  t.ac.forEach(item=>{
+    const ai=mk('div','','action-item');
+    ap(ai,mk('div',item.s,'action-num'));
+    const at=mk('div','','action-text');
+    at.innerHTML=item.t;
+    ap(ai,at);ap(al,ai);
+  });
+  ap(ac,al);ap(card,ac);
+  ap(card,mk('div','','r-divider'));
+
+  // 表と裏の強み
+  ap(card,mk('div','表と裏の強み','r-section-label'));
+  const rc=mk('div','','r-2col');
+  const rb1=mk('div','','r-box');
+  ap(rb1,mk('div','自分が知っている強み','r-box-label'));
+  ap(rb1,mk('div',c.t,'r-box-title'));
+  ap(rb1,mk('div',c.b,'r-box-body'));
+  const rb2=mk('div','','r-box');
+  ap(rb2,mk('div','周りには見えている強み','r-box-label'));
+  ap(rb2,mk('div',u.t,'r-box-title'));
+  ap(rb2,mk('div',u.b,'r-box-body'));
+  ap(rc,rb1);ap(rc,rb2);ap(card,rc);
+
+  const tg=mk('div','','tags');
+  t.tg.forEach(tag=>{ap(tg,mk('span','# '+tag,'tag'));});
+  ap(card,tg);
+  ap(wrap,card);
+
+  const fs=mk('div','','fumiko-strip fade-in');
+  ap(fs,mk('div','fumicom より','fumiko-from'));
+  ap(fs,mk('div',t.fm,'fumiko-text'));
+  ap(wrap,fs);
+
+  const sw=mk('div','','share-wrap');
+  ap(sw,mk('div','結果をシェアする','share-note'));
+  const sb=mk('button','Threads でシェア','btn-share');
+  sb.onclick=()=>{
+    const text='私のトリセツタイプは「'+t.n+'」でした。\n\n'+t.c.replace('\n','')+'\n\n意思決定：'+dv.n+' / 回復：'+rv.n+'\n\n#はたらく自分のトリセツ #fumicomworks';
+    window.open('https://threads.net/intent/post?text='+encodeURIComponent(text),'_blank');
+  };
+  const rb=mk('button','もう一度やる','btn-retry');
+  rb.onclick=resetAll;
+  ap(sw,sb);ap(sw,rb);ap(wrap,sw);
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetAll(){
+  ['y','mo','d','h','mi'].forEach(id=>document.getElementById(id).value='');
+  ans.q1=null;ans.q2=null;
+  document.getElementById('result').innerHTML='';
+  document.getElementById('result').style.display='none';
+  document.getElementById('step-dots').style.display='flex';
+  document.getElementById('step-label').style.display='block';
+  document.getElementById('btn-to-q').disabled=true;
+  document.getElementById('btn-result').disabled=true;
+  document.querySelectorAll('.opt').forEach(b=>b.classList.remove('sel'));
+  setStep(0);
+}
+</script>
+</body>
+</html>
